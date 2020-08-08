@@ -28,10 +28,6 @@ let overlays = {
   Earthquakes: earthquakes
 };
 
-// Then we add a control to the map that will allow the user to change
-// which layers are visible.
-L.control.layers(baseMaps, overlays).addTo(map);
-
 // Create the map object with center, zoom level and default layer.
 let map = L.map('mapid', {
 	center: [39.5, -98.5],
@@ -45,6 +41,9 @@ let myStyle = {
   fillColor: "#adaa63",
   fillOpacity: 0.8
 }
+// Then we add a control to the map that will allow the user to change
+// which layers are visible.
+L.control.layers(baseMaps, overlays).addTo(map);
 
 // Retrieve the earthquake GeoJSON data.
 d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson").then(function (data) {
@@ -63,7 +62,6 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
         layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place);
       }
     }).addTo(earthquakes);
-
     // Create a legend control object.
     let legend = L.control({
                   position: 'bottomright'
@@ -79,63 +77,58 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
         "#ea822c",
         "#ea2c2c"
       ];
-    }
-
-    // Looping through our intervals to generate a label with a colored square for each interval.
-   for (var i = 0; i < magnitudes.length; i++) {
-         console.log(colors[i]);
-         div.innerHTML +=
-           "<i style=`background: " + colors[i] + "`></i> " +
-           magnitudes[i] + (magnitudes[i + 1] ? "&ndash;" + magnitudes[i + 1] + "<br>" : "+");
-         }
-   return div;
-  }
+      // Looping through our intervals to generate a label with a colored square for each interval.
+     for (var i = 0; i < magnitudes.length; i++) {
+           console.log(colors[i]);
+           div.innerHTML +=
+             "<i style='background: " + colors[i] + "'></i> " +
+             magnitudes[i] + (magnitudes[i + 1] ? "&ndash;" + magnitudes[i + 1] + "<br>" : "+");
+     }
+     return div;
+     }
 
   legend.addTo(map);
-
     // Then we add the earthquake layer to our map.
   earthquakes.addTo(map);
-)
+  // This function returns the style data for each of the earthquakes we plot on
+  // the map. We pass the magnitude of the earthquake into two separate functions
+  // to calculate the color and radius.
+  function styleInfo(feature) { return {
+      opacity: 1,
+      fillOpacity: 1,
+      fillColor: getColor(feature.properties.mag),
+      color: "#000000",
+      radius: getRadius(feature.properties.mag),
+      stroke: true,
+      weight: 0.5
+      };
+  }
+  // This function determines the color of the circle based on the magnitude of the earthquake.
+  function getColor(magnitude) {
+    if (magnitude > 5) {
+      return "#ea2c2c";
+    }
+    if (magnitude > 4) {
+      return "#ea822c";
+    }
+    if (magnitude > 3) {
+      return "#ee9c00";
+    }
+    if (magnitude > 2) {
+      return "#eecc00";
+    }
+    if (magnitude > 1) {
+      return "#d4ee00";
+    }
+    return "#98ee00";
+  }
+  // This function determines the radius of the earthquake marker based on its magnitude.
+  // Earthquakes with a magnitude of 0 will be plotted with a radius of 1.
+  function getRadius(magnitude) {
+    if (magnitude === 0) {
+      return 1;
+    }
+    return magnitude * 4;
+  }
 
-
-
-// This function returns the style data for each of the earthquakes we plot on
-// the map. We pass the magnitude of the earthquake into two separate functions
-// to calculate the color and radius.
-function styleInfo(feature) { return {
-    opacity: 1,
-    fillOpacity: 1,
-    fillColor: getColor(feature.properties.mag),
-    color: "#000000",
-    radius: getRadius(feature.properties.mag),
-    stroke: true,
-    weight: 0.5
-    };
-}
-// This function determines the color of the circle based on the magnitude of the earthquake.
-function getColor(magnitude) {
-  if (magnitude > 5) {
-    return "#ea2c2c";
-  }
-  if (magnitude > 4) {
-    return "#ea822c";
-  }
-  if (magnitude > 3) {
-    return "#ee9c00";
-  }
-  if (magnitude > 2) {
-    return "#eecc00";
-  }
-  if (magnitude > 1) {
-    return "#d4ee00";
-  }
-  return "#98ee00";
-}
-// This function determines the radius of the earthquake marker based on its magnitude.
-// Earthquakes with a magnitude of 0 will be plotted with a radius of 1.
-function getRadius(magnitude) {
-  if (magnitude === 0) {
-    return 1;
-  }
-  return magnitude * 4;
-}
+})
